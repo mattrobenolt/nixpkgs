@@ -9,7 +9,7 @@
   outputs = { self, nixpkgs, flake-utils }:
     let
       # Overlay that adds our custom packages
-      overlay = final: prev: {
+      overlay = _final: prev: {
         zlint = prev.callPackage ./pkgs/zlint { };
       };
     in
@@ -25,7 +25,7 @@
       in
       {
         packages = {
-          zlint = pkgs.zlint;
+          inherit (pkgs) zlint;
           default = self.packages.${system}.zlint;
         };
 
