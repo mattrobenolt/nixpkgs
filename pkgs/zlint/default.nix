@@ -36,13 +36,13 @@ stdenv.mkDerivation {
 
   dontUnpack = true;
   dontBuild = true;
+  dontFixup = true;
 
   installPhase = ''
     runHook preInstall
 
     mkdir -p $out/bin
-    cp $src $out/bin/zlint
-    chmod +x $out/bin/zlint
+    install -D -m755 $src $out/bin/zlint
 
     runHook postInstall
   '';
