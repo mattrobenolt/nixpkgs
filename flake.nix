@@ -16,6 +16,27 @@
     {
       # Export the overlay for others to use
       overlays.default = overlay;
+
+      # Project templates
+      templates = {
+        go = {
+          path = ./templates/go;
+          description = "Go development environment";
+        };
+
+        zig = {
+          path = ./templates/zig;
+          description = "Zig development environment";
+        };
+
+        bun = {
+          path = ./templates/bun;
+          description = "Bun development environment";
+        };
+      };
+
+      # Default template
+      defaultTemplate = self.templates.go;
     } // flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
