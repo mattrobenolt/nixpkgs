@@ -7,13 +7,25 @@
   };
 
   outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
+    let
+      # Overlay that adds our custom packages
+      overlay = final: prev: {
+        zlint = prev.callPackage ./pkgs/zlint { };
+      };
+    in
+    {
+      # Export the overlay for others to use
+      overlays.default = overlay;
+    } // flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ overlay ];
+        };
       in
       {
         packages = {
-          zlint = pkgs.callPackage ./pkgs/zlint { };
+          zlint = pkgs.zlint;
           default = self.packages.${system}.zlint;
         };
 
