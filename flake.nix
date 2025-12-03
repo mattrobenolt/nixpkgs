@@ -28,11 +28,11 @@
       # Overlay that adds our custom packages
       overlay = final: prev:
         let
-          # Create all go_1_XX packages dynamically
+          # Create all matt_go_1_XX packages dynamically
           dynamicGoPackages = builtins.listToAttrs (
             map
               (majorMinor: {
-                name = "go_" + (builtins.replaceStrings [ "." ] [ "_" ] majorMinor);
+                name = "matt_go_" + (builtins.replaceStrings [ "." ] [ "_" ] majorMinor);
                 value = makeGo prev majorMinor;
               })
               (builtins.attrNames goVersions)
@@ -76,9 +76,9 @@
       {
         packages =
           let
-            # Get all go_1_XX package names dynamically
+            # Get all matt_go_1_XX package names dynamically
             goPackageNames = map
-              (majorMinor: "go_" + (builtins.replaceStrings [ "." ] [ "_" ] majorMinor))
+              (majorMinor: "matt_go_" + (builtins.replaceStrings [ "." ] [ "_" ] majorMinor))
               (builtins.attrNames goVersions);
             # Create attrset with all go packages
             goPackages = builtins.listToAttrs (
