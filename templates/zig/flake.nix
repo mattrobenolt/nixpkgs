@@ -28,6 +28,13 @@
             zls_0_15
             zlint
           ];
+
+          shellHook = ''
+            # Zig doesn't understand nix's macro-prefix-map flags, causes warnings
+            # See: https://github.com/ziglang/zig/issues/18998
+            # Note: We keep NIX_LDFLAGS for library paths, only unset NIX_CFLAGS_COMPILE
+            unset NIX_CFLAGS_COMPILE
+          '';
         };
       }
     );

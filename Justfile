@@ -25,6 +25,10 @@ check:
     @echo ""
     @just lint
 
+# Update Go versions and hashes
+update-go:
+    @./pkgs/go/update.py
+
 # List available commands
 default:
     @just --list
