@@ -40,6 +40,9 @@
         in
         {
           zlint = prev.callPackage ./pkgs/zlint { };
+
+          # Latest Go version as matt_go (automatically uses the highest version)
+          matt_go = makeGo prev latestGoVersion;
         } // dynamicGoPackages;
     in
     {
@@ -88,7 +91,7 @@
             );
           in
           {
-            inherit (pkgs) zlint;
+            inherit (pkgs) zlint matt_go;
             default = self.packages.${system}.zlint;
           } // goPackages;
 
