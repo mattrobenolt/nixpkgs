@@ -31,6 +31,25 @@ jobs:
         run: |
           git diff --quiet pkgs/go/versions.json pkgs/go/hashes.json || echo "changed=true" >> $GITHUB_OUTPUT
 
+      - name: Validate flake
+        if: steps.verify-diff.outputs.changed == 'true'
+        run: |
+          echo "🔍 Running flake checks..."
+          nix flake check --no-build
+          echo "✓ Flake checks passed"
+
+      - name: Build and test Go packages
+        if: steps.verify-diff.outputs.changed == 'true'
+        run: |
+          echo "🏗️ Building Go packages to verify hashes..."
+          nix build .#go --no-link
+          echo "✓ Latest Go builds successfully"
+
+          # Test that Go actually works
+          echo "🧪 Testing Go binary..."
+          nix run .#go -- version
+          echo "✓ Go binary works"
+
       - name: Commit and push changes
         if: steps.verify-diff.outputs.changed == 'true'
         uses: stefanzweifel/git-auto-commit-action@v5
@@ -44,12 +63,17 @@ jobs:
       - name: Summary
         if: steps.verify-diff.outputs.changed == 'true'
         run: |
-          echo "### 🎉 Go versions updated!" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎉 Go versions updated and validated!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Updated versions:**" >> $GITHUB_STEP_SUMMARY
           echo '```json' >> $GITHUB_STEP_SUMMARY
           cat pkgs/go/versions.json >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Validation:**" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Flake checks passed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ All packages build successfully" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Go binary tested and working" >> $GITHUB_STEP_SUMMARY
 
       - name: No changes
         if: steps.verify-diff.outputs.changed != 'true'

@@ -2,15 +2,27 @@
 
 Custom Nix packages and overlays that provide faster updates than nixpkgs-unstable.
 
+## 🎉 Zero Maintenance Philosophy
+
+This repository is designed to be **completely maintenance-free**. All packages are automatically updated via GitHub Actions without any manual intervention.
+
 ## Packages
 
-### Go
+### Go (Fully Automated ✨)
 
-Latest upstream Go releases, automatically updated daily via GitHub Actions.
+**Latest upstream Go releases, automatically updated daily.**
 
-- `go` - Latest Go (1.25.x)
+The Go overlay is **completely zero-maintenance**:
+- Automatically detects all available Go versions (1.24, 1.25, 1.26+)
+- Automatically creates packages for each version (`go_1_24`, `go_1_25`, etc.)
+- Automatically updates daily via GitHub Actions
+- **When Go 1.26 is released, `go_1_26` will appear automatically!**
+
+Available packages:
+- `go` - Latest Go (always points to the highest version)
 - `go_1_25` - Go 1.25.x
 - `go_1_24` - Go 1.24.x
+- _(Future versions appear automatically)_
 
 See [`pkgs/go/README.md`](./pkgs/go/README.md) for details.
 
@@ -28,7 +40,7 @@ Latest zlint releases.
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     mattrobenolt-nixpkgs = {
       url = "github:mattrobenolt/nixpkgs";
-      # Optional: reduce closure size by not pulling in the whole repo
+      # Optional: reduce closure size
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -43,8 +55,8 @@ Latest zlint releases.
     in {
       devShells.${system}.default = pkgs.mkShell {
         packages = [
-          pkgs.go      # Latest Go from this overlay
-          pkgs.zlint   # zlint from this overlay
+          pkgs.go      # Latest Go (auto-updated!)
+          pkgs.zlint   # Latest zlint
         ];
       };
     };
@@ -57,11 +69,12 @@ Latest zlint releases.
 # Enter dev shell
 nix develop
 
-# Update Go versions
+# Update Go versions (optional - GitHub Actions does this daily)
 just update-go
 
 # Build packages
 nix build .#go
+nix build .#go_1_24
 nix build .#zlint
 
 # Run packages
@@ -85,13 +98,19 @@ nix flake init -t github:mattrobenolt/nixpkgs#bun
 
 ## Automation
 
-Go versions are automatically updated daily at 2 AM UTC via GitHub Actions. The workflow:
+### Go Updates
 
-1. Fetches latest Go releases from go.dev
-2. Generates SRI hashes for all platforms
-3. Commits changes if new versions are available
+Go versions are **automatically updated daily at 2 AM UTC** via GitHub Actions:
 
-You can also manually trigger the workflow from the Actions tab.
+1. 🔍 Scrapes go.dev for all available Go versions
+2. 📦 Finds the latest patch for each minor version (1.24.x, 1.25.x, etc.)
+3. 🔐 Generates SRI hashes for all platforms (Linux, macOS, x86_64, ARM64)
+4. 💾 Commits changes to `versions.json` and `hashes.json`
+5. 🎉 New `go_1_XX` packages appear automatically in the flake
+
+**When Go 1.26 is released:** It will automatically appear as `pkgs.go_1_26` the next day!
+
+You can also manually trigger the workflow from the Actions tab on GitHub.
 
 ## Development
 

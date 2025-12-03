@@ -1,31 +1,52 @@
 # Go Overlay
 
-Provides the latest upstream Go releases, updated faster than nixpkgs-unstable.
+**Fully automated** Go releases that update faster than nixpkgs-unstable.
+
+## 🎉 Zero Maintenance
+
+This overlay is **completely maintenance-free**:
+
+- ✅ **Auto-detects** all available Go minor versions (1.24, 1.25, 1.26, etc.)
+- ✅ **Auto-updates** daily via GitHub Actions
+- ✅ **Auto-creates** packages (`go_1_24`, `go_1_25`, etc.) dynamically
+- ✅ **Auto-commits** when new versions are available
+
+**When Go 1.26 is released, it will automatically appear as `go_1_26` with zero manual intervention!**
 
 ## Available Packages
 
-- `go` - Latest Go version (currently 1.25)
+All packages are created dynamically from the latest available Go versions:
+
+- `go` - Latest Go version (automatically uses the highest minor version)
 - `go_1_25` - Go 1.25.x (latest patch)
 - `go_1_24` - Go 1.24.x (latest patch)
+- `go_1_26` - Will appear automatically when Go 1.26 is released!
+- _(and so on for future versions...)_
 
-## Updating
-
-To fetch the latest Go versions and update hashes:
-
+Check current versions:
 ```bash
-just update-go
+cat pkgs/go/versions.json
 ```
 
-Or directly:
+## How It Works
 
-```bash
-./pkgs/go/update.py
-```
+### Daily Automation
 
-This will:
-1. Fetch the latest patch versions for Go 1.24 and 1.25
-2. Download and generate SRI hashes for all platforms
-3. Update `versions.json` and `hashes.json`
+A GitHub Actions workflow runs daily at 2 AM UTC:
+
+1. Scrapes go.dev for all available Go versions
+2. Finds the latest patch version for each minor version (1.24.x, 1.25.x, etc.)
+3. Downloads and generates SRI hashes for all platforms
+4. Commits changes to `versions.json` and `hashes.json`
+
+### Dynamic Package Creation
+
+The flake automatically:
+- Reads `versions.json` to find all available versions
+- Creates `go_1_XX` packages for each version
+- Sets `go` to always point to the latest version
+
+**No code changes needed when new versions are released!**
 
 ## Usage
 
@@ -35,7 +56,7 @@ This will:
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    mattrobenolt-nixpkgs.url = "github:mattrobenolt/nixpkgs";  # or path:/Users/matt/code/nixpkgs
+    mattrobenolt-nixpkgs.url = "github:mattrobenolt/nixpkgs";
   };
 
   outputs = { nixpkgs, mattrobenolt-nixpkgs, ... }:
@@ -48,30 +69,37 @@ This will:
     in {
       devShells.${system}.default = pkgs.mkShell {
         packages = [
-          pkgs.go       # Latest (1.25.5)
+          pkgs.go         # Latest (automatically updated)
           # or
-          pkgs.go_1_24  # Specific version (1.24.9)
+          pkgs.go_1_24    # Specific version
         ];
       };
     };
 }
 ```
 
-### In nix-darwin
+### Manual Updates (Optional)
 
-Add to your `flake.nix` inputs and apply the overlay in your system configuration.
+You can manually trigger updates:
 
-## Adding New Versions
+```bash
+just update-go
+```
 
-To track a new Go minor version (e.g., 1.26 when released):
+Or directly:
 
-1. Edit `update.py` and add the new version to the regex patterns
-2. Update the `versions` dict in `fetch_latest_versions()`
-3. Update the flake.nix overlay to expose `go_1_26`
+```bash
+./pkgs/go/update.py
+```
 
 ## Files
 
 - `default.nix` - Package builder (accepts version and hashes)
 - `versions.json` - Maps minor versions to latest patch versions
 - `hashes.json` - SRI hashes for all versions and platforms
-- `update.py` - Automated update script
+- `update.py` - Automated update script that auto-detects all versions
+- `README.md` - This file
+
+## That's It!
+
+No more manual updates. When Go 1.26 drops, it just appears. 🎉

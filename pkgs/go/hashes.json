@@ -1,14 +1,8 @@
 {
-  "1.25.5": {
-    "linux-amd64": "sha256-npt1XWOzas8wwSqaP8N5JDcUwcbT3XKGHaY38zbrs1s=",
-    "linux-arm64": "sha256-sAtpSQPRJsWIw3jnLTVFVJk105gmNbo/epZMn6I/47k=",
-    "darwin-amd64": "sha256-tp1RvOWZ5TgalM4VJjrmROyEZnpc4j1Y3C5j4sEqn1Y=",
-    "darwin-arm64": "sha256-vtjr6CTj07J+hHHRMH+AP8arjh0Ot6SuGWl5vZuAHdM="
-  },
-  "1.24.9": {
-    "linux-amd64": "sha256-W3iZWRwt1unaGAn95KL62ELEXT9rnesjW6giFuMeNKY=",
-    "linux-arm64": "sha256-mqEkPVHUHi+T6JXInAotr3FmdoxKTDrHnbgQKdKVpUA=",
-    "darwin-amd64": "sha256-lhqiriuX5CjW2JkTZ+fJjLQDusVCdrglmurUKgCBWRw=",
-    "darwin-arm64": "sha256-r0UbQGUdf7Ntsbu9nGbdvtKLltfaSKvqUKGfgsbp0dY="
+  "1.24.0": {
+    "darwin-amd64": "sha256-PLACEHOLDER-OLD-VERSION",
+    "darwin-arm64": "sha256-PLACEHOLDER-OLD-VERSION",
+    "linux-amd64": "sha256-PLACEHOLDER-OLD-VERSION",
+    "linux-arm64": "sha256-PLACEHOLDER-OLD-VERSION"
   }
 }

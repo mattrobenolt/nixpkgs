@@ -22,17 +22,28 @@
           inherit version hashes;
         };
 
+      # Get the latest Go version (highest minor version)
+      latestGoVersion = builtins.head (builtins.sort (a: b: a > b) (builtins.attrNames goVersions));
+
       # Overlay that adds our custom packages
-      overlay = _final: prev: {
-        zlint = prev.callPackage ./pkgs/zlint { };
+      overlay = final: prev:
+        let
+          # Create all go_1_XX packages dynamically
+          dynamicGoPackages = builtins.listToAttrs (
+            map
+              (majorMinor: {
+                name = "go_" + (builtins.replaceStrings [ "." ] [ "_" ] majorMinor);
+                value = makeGo prev majorMinor;
+              })
+              (builtins.attrNames goVersions)
+          );
+        in
+        {
+          zlint = prev.callPackage ./pkgs/zlint { };
 
-        # Latest Go version (currently 1.25)
-        go = makeGo prev "1.25";
-
-        # Specific minor versions
-        go_1_25 = makeGo prev "1.25";
-        go_1_24 = makeGo prev "1.24";
-      };
+          # Latest Go version (automatically uses the highest version)
+          go = makeGo prev latestGoVersion;
+        } // dynamicGoPackages;
     in
     {
       # Export the overlay for others to use
@@ -66,10 +77,23 @@
         };
       in
       {
-        packages = {
-          inherit (pkgs) zlint go go_1_24 go_1_25;
-          default = self.packages.${system}.zlint;
-        };
+        packages =
+          let
+            # Get all go_1_XX package names dynamically
+            goPackageNames = map
+              (majorMinor: "go_" + (builtins.replaceStrings [ "." ] [ "_" ] majorMinor))
+              (builtins.attrNames goVersions);
+            # Create attrset with all go packages
+            goPackages = builtins.listToAttrs (
+              map
+                (name: { inherit name; value = pkgs.${name}; })
+                goPackageNames
+            );
+          in
+          {
+            inherit (pkgs) zlint go;
+            default = self.packages.${system}.zlint;
+          } // goPackages;
 
         # Development shell with Nix tooling
         devShells.default = pkgs.mkShell {
