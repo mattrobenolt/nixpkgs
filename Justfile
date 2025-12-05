@@ -29,6 +29,15 @@ check:
 update-go:
     @./pkgs/go/update.py
 
+# Update zlint stable and unstable packages
+update-zlint:
+    @./pkgs/zlint/update.py
+
+# Update all packages
+update-all:
+    @just update-go
+    @just update-zlint
+
 # List available commands
 default:
     @just --list

@@ -28,11 +28,11 @@
       # Overlay that adds our custom packages
       overlay = final: prev:
         let
-          # Create all matt_go_1_XX packages dynamically
+          # Create all go-bin_1_XX packages dynamically
           dynamicGoPackages = builtins.listToAttrs (
             map
               (majorMinor: {
-                name = "matt_go_" + (builtins.replaceStrings [ "." ] [ "_" ] majorMinor);
+                name = "go-bin_" + (builtins.replaceStrings [ "." ] [ "_" ] majorMinor);
                 value = makeGo prev majorMinor;
               })
               (builtins.attrNames goVersions)
@@ -40,9 +40,10 @@
         in
         {
           zlint = prev.callPackage ./pkgs/zlint { };
+          zlint-unstable = prev.callPackage ./pkgs/zlint/unstable.nix { };
 
-          # Latest Go version as matt_go (automatically uses the highest version)
-          matt_go = makeGo prev latestGoVersion;
+          # Latest Go version as go-bin (automatically uses the highest version)
+          go-bin = makeGo prev latestGoVersion;
         } // dynamicGoPackages;
     in
     {
@@ -79,9 +80,9 @@
       {
         packages =
           let
-            # Get all matt_go_1_XX package names dynamically
+            # Get all go-bin_1_XX package names dynamically
             goPackageNames = map
-              (majorMinor: "matt_go_" + (builtins.replaceStrings [ "." ] [ "_" ] majorMinor))
+              (majorMinor: "go-bin_" + (builtins.replaceStrings [ "." ] [ "_" ] majorMinor))
               (builtins.attrNames goVersions);
             # Create attrset with all go packages
             goPackages = builtins.listToAttrs (
@@ -91,7 +92,7 @@
             );
           in
           {
-            inherit (pkgs) zlint matt_go;
+            inherit (pkgs) zlint zlint-unstable go-bin;
             default = self.packages.${system}.zlint;
           } // goPackages;
 

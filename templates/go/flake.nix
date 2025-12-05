@@ -24,8 +24,8 @@
       {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
-            matt_go # Latest Go (auto-updated daily, currently 1.25.x)
-            # Or use specific versions: matt_go_1_24, matt_go_1_25
+            go-bin # Latest Go (auto-updated daily, currently 1.25.x)
+            # Or use specific versions: go-bin_1_24, go-bin_1_25
             gopls
             # Add other tools: gotools, delve, etc.
           ];

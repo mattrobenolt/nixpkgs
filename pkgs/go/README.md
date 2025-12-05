@@ -1,56 +1,44 @@
 # Go Overlay
 
-**Fully automated** Go releases that update faster than nixpkgs-unstable.
+Automated Go releases that update faster than nixpkgs-unstable.
 
-## 🎉 Zero Maintenance
+## How it works
 
-This overlay is **completely maintenance-free**:
+This overlay is maintenance-free:
 
-- ✅ **Auto-detects** all available Go minor versions (1.24, 1.25, 1.26, etc.)
-- ✅ **Auto-updates** daily via GitHub Actions
-- ✅ **Auto-creates** packages (`go_1_24`, `go_1_25`, etc.) dynamically
-- ✅ **Auto-commits** when new versions are available
+- Detects all available Go minor versions (1.24, 1.25, 1.26, etc.)
+- Updates daily via GitHub Actions
+- Creates packages dynamically (`go-bin_1_24`, `go-bin_1_25`, etc.)
+- Commits when new versions are available
 
-**When Go 1.26 is released, it will automatically appear as `go_1_26` with zero manual intervention!**
+When Go 1.26 is released, `go-bin_1_26` will show up automatically.
 
 ## Available Packages
 
-All packages are created dynamically from the latest available Go versions:
+Packages are created dynamically from the latest available Go versions:
 
-- `go` - Latest Go version (automatically uses the highest minor version)
-- `go_1_25` - Go 1.25.x (latest patch)
-- `go_1_24` - Go 1.24.x (latest patch)
-- `go_1_26` - Will appear automatically when Go 1.26 is released!
-- _(and so on for future versions...)_
+- `go-bin` - Latest Go version (points to highest minor version)
+- `go-bin_1_25` - Go 1.25.x (latest patch)
+- `go-bin_1_24` - Go 1.24.x (latest patch)
+- Future versions appear automatically
 
 Check current versions:
 ```bash
 cat pkgs/go/versions.json
 ```
 
-## How It Works
+## Daily Automation
 
-### Daily Automation
+GitHub Actions runs daily at 2 AM UTC:
 
-A GitHub Actions workflow runs daily at 2 AM UTC:
-
-1. Scrapes go.dev for all available Go versions
-2. Finds the latest patch version for each minor version (1.24.x, 1.25.x, etc.)
+1. Scrapes go.dev for all available versions
+2. Finds the latest patch for each minor version (1.24.x, 1.25.x, etc.)
 3. Downloads and generates SRI hashes for all platforms
 4. Commits changes to `versions.json` and `hashes.json`
 
-### Dynamic Package Creation
-
-The flake automatically:
-- Reads `versions.json` to find all available versions
-- Creates `go_1_XX` packages for each version
-- Sets `go` to always point to the latest version
-
-**No code changes needed when new versions are released!**
+The flake reads these JSON files and creates packages for each version. No code changes needed when new versions are released.
 
 ## Usage
-
-### In a project flake
 
 ```nix
 {
@@ -69,16 +57,16 @@ The flake automatically:
     in {
       devShells.${system}.default = pkgs.mkShell {
         packages = [
-          pkgs.go         # Latest (automatically updated)
+          pkgs.go-bin      # Latest
           # or
-          pkgs.go_1_24    # Specific version
+          pkgs.go-bin_1_24 # Specific version
         ];
       };
     };
 }
 ```
 
-### Manual Updates (Optional)
+## Manual Updates
 
 You can manually trigger updates:
 
@@ -86,7 +74,7 @@ You can manually trigger updates:
 just update-go
 ```
 
-Or directly:
+Or run the script directly:
 
 ```bash
 ./pkgs/go/update.py
@@ -97,9 +85,5 @@ Or directly:
 - `default.nix` - Package builder (accepts version and hashes)
 - `versions.json` - Maps minor versions to latest patch versions
 - `hashes.json` - SRI hashes for all versions and platforms
-- `update.py` - Automated update script that auto-detects all versions
+- `update.py` - Automated update script
 - `README.md` - This file
-
-## That's It!
-
-No more manual updates. When Go 1.26 drops, it just appears. 🎉
