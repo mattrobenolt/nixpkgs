@@ -26,7 +26,7 @@
       latestGoVersion = builtins.head (builtins.sort (a: b: a > b) (builtins.attrNames goVersions));
 
       # Overlay that adds our custom packages
-      overlay = final: prev:
+      overlay = _final: prev:
         let
           # Create all go-bin_1_XX packages dynamically
           dynamicGoPackages = builtins.listToAttrs (

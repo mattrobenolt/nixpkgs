@@ -1,3 +1,7 @@
+# List available commands
+default:
+    @just --list
+
 # Format all Nix files
 fmt:
     @echo "Formatting Nix files with nixpkgs-fmt..."
@@ -9,10 +13,10 @@ lint:
     @echo "Running Nix linters..."
     @echo ""
     @echo "==> Running statix (checking for anti-patterns)..."
-    @statix check . && echo "✓ statix: no issues found" || echo "✗ statix found issues (run 'statix fix' to auto-fix)"
+    @statix check . --ignore .direnv && echo "✓ statix: no issues found" || echo "✗ statix found issues (run 'statix fix' to auto-fix)"
     @echo ""
     @echo "==> Running deadnix (finding unused code)..."
-    @deadnix --fail . && echo "✓ deadnix: no unused code found" || echo "✗ deadnix found unused code"
+    @deadnix --fail . --exclude .direnv && echo "✓ deadnix: no unused code found" || echo "✗ deadnix found unused code"
     @echo ""
     @echo "Done!"
 
@@ -38,6 +42,3 @@ update-all:
     @just update-go
     @just update-zlint
 
-# List available commands
-default:
-    @just --list

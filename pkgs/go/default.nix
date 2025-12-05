@@ -42,10 +42,12 @@ stdenv.mkDerivation {
   passthru = {
     inherit version;
     CGO_ENABLED = 1;
-    GOOS = if stdenv.hostPlatform.isDarwin then "darwin"
+    GOOS =
+      if stdenv.hostPlatform.isDarwin then "darwin"
       else if stdenv.hostPlatform.isLinux then "linux"
       else throw "Unsupported OS";
-    GOARCH = if stdenv.hostPlatform.isx86_64 then "amd64"
+    GOARCH =
+      if stdenv.hostPlatform.isx86_64 then "amd64"
       else if stdenv.hostPlatform.isAarch64 then "arm64"
       else throw "Unsupported architecture";
   };

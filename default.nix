@@ -30,6 +30,6 @@ in
   # NUR metadata
   modules = [ ];
   overlays = {
-    default = flake.overlays.default;
+    inherit (flake.overlays) default;
   };
 } // goPackages
