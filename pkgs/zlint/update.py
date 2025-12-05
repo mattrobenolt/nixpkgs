@@ -173,11 +173,86 @@ async def update_stable(version):
     print(f"{GREEN}Updated {STABLE_FILE}{NC}")
 
 
+def extract_zig_version(zon_content):
+    """Extract minimum_zig_version from build.zig.zon."""
+    # Look for .minimum_zig_version = "X.Y.Z"
+    match = re.search(r'\.minimum_zig_version\s*=\s*"([0-9]+\.[0-9]+)(?:\.[0-9]+)?"', zon_content)
+    if match:
+        version = match.group(1)
+        # Convert "0.14" to "0_14" for Nix attribute name
+        return version.replace(".", "_")
+    return None
+
+
+async def generate_zig_deps(sha):
+    """Generate deps.nix from build.zig.zon using zon2nix."""
+    print(f"{YELLOW}  Generating Zig dependencies with zon2nix...{NC}")
+
+    deps_file = SCRIPT_DIR / "deps.nix"
+
+    # Fetch build.zig.zon from the commit
+    zon_url = f"https://raw.githubusercontent.com/DonIsaac/zlint/{sha}/build.zig.zon"
+
+    loop = asyncio.get_event_loop()
+
+    def fetch_zon():
+        return urlopen(zon_url).read().decode('utf-8')
+
+    def run_zon2nix(zon_content):
+        import tempfile
+        import os
+        # Write to temp file since zon2nix expects a file path
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.zon', delete=False) as f:
+            f.write(zon_content)
+            temp_path = f.name
+
+        try:
+            result = subprocess.run(
+                ["zon2nix", temp_path],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            return result.stdout
+        finally:
+            os.unlink(temp_path)
+
+    try:
+        zon_content = await loop.run_in_executor(None, fetch_zon)
+
+        # Extract Zig version
+        zig_version = extract_zig_version(zon_content)
+        if zig_version:
+            print(f"{GREEN}  Detected Zig version: {zig_version.replace('_', '.')}{NC}")
+
+        deps_nix = await loop.run_in_executor(None, lambda: run_zon2nix(zon_content))
+
+        # Write deps.nix
+        deps_file.write_text(deps_nix)
+        print(f"{GREEN}  Generated {deps_file}{NC}")
+
+        return zig_version
+
+    except subprocess.CalledProcessError as e:
+        print(f"{RED}Error running zon2nix: {e}{NC}", file=sys.stderr)
+        if e.stderr:
+            print(f"{RED}stderr: {e.stderr}{NC}", file=sys.stderr)
+        if e.stdout:
+            print(f"{YELLOW}stdout: {e.stdout}{NC}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"{RED}Error fetching build.zig.zon: {e}{NC}", file=sys.stderr)
+        sys.exit(1)
+
+
 async def update_unstable(sha, source_hash):
     """Update unstable zlint package."""
     from datetime import datetime
 
     print(f"{GREEN}Updating unstable zlint to {sha[:8]}{NC}")
+
+    # Generate deps.nix from build.zig.zon and get Zig version
+    zig_version = await generate_zig_deps(sha)
 
     # Read current file
     content = UNSTABLE_FILE.read_text()
@@ -204,6 +279,15 @@ async def update_unstable(sha, source_hash):
         content
     )
 
+    # Update Zig version if detected
+    if zig_version:
+        content = re.sub(
+            r', zig_\d+_\d+',
+            f', zig_{zig_version}',
+            content
+        )
+        print(f"{GREEN}  Updated Zig version to zig_{zig_version}{NC}")
+
     # Write back
     UNSTABLE_FILE.write_text(content)
 
@@ -229,6 +313,7 @@ async def main():
     print(f"{YELLOW}Updated files:{NC}")
     print(f"  - {STABLE_FILE} (v{version})")
     print(f"  - {UNSTABLE_FILE} ({sha[:8]})")
+    print(f"  - {SCRIPT_DIR / 'deps.nix'} (Zig dependencies)")
 
 
 if __name__ == "__main__":

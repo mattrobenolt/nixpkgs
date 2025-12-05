@@ -104,6 +104,7 @@
 
             # For update scripts
             python3
+            zon2nix # Zig dependency generator
 
             # Nix formatter
             nixpkgs-fmt # Official nixpkgs formatter

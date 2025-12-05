@@ -1,6 +1,7 @@
 { lib
 , stdenv
 , fetchFromGitHub
+, callPackage
 , zig_0_14
 }:
 
@@ -18,6 +19,10 @@ stdenv.mkDerivation {
   nativeBuildInputs = [
     zig_0_14.hook
   ];
+
+  postPatch = ''
+    ln -s ${callPackage ./deps.nix { }} $ZIG_GLOBAL_CACHE_DIR/p
+  '';
 
   zigBuildFlags = [ "-Doptimize=ReleaseSafe" ];
 
