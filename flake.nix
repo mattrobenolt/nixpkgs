@@ -29,7 +29,8 @@
         };
 
       # Get the latest Go version (highest minor version)
-      latestGoVersion = builtins.head (builtins.sort (a: b: a > b) (builtins.attrNames goVersions));
+      # Filter out "next" to only consider stable versions
+      latestGoVersion = builtins.head (builtins.sort (a: b: a > b) (builtins.filter (v: v != "next") (builtins.attrNames goVersions)));
 
       # Overlay that adds our custom packages
       overlay =
