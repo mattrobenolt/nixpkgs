@@ -1,7 +1,7 @@
 { lib
 , stdenvNoCC
 , fetchFromGitHub
-, zig_0_15
+, zigpkgs
 ,
 }:
 
@@ -16,7 +16,7 @@ stdenvNoCC.mkDerivation {
     hash = "sha256-bvZnNiJ6YbsoQb41oAWzZNErCcAtKKudQMwvAfa4UEA=";
   };
 
-  nativeBuildInputs = [ zig_0_15 ];
+  nativeBuildInputs = [ zigpkgs."0.15.2" ];
 
   dontConfigure = true;
   dontInstall = true;

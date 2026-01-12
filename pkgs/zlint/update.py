@@ -174,13 +174,21 @@ async def update_stable(version):
 
 
 def extract_zig_version(zon_content):
-    """Extract minimum_zig_version from build.zig.zon."""
+    """Extract minimum_zig_version from build.zig.zon and map to available zigpkgs version."""
     # Look for .minimum_zig_version = "X.Y.Z"
-    match = re.search(r'\.minimum_zig_version\s*=\s*"([0-9]+\.[0-9]+)(?:\.[0-9]+)?"', zon_content)
+    match = re.search(r'\.minimum_zig_version\s*=\s*"([0-9]+\.[0-9]+(?:\.[0-9]+)?)"', zon_content)
     if match:
-        version = match.group(1)
-        # Convert "0.14" to "0_14" for Nix attribute name
-        return version.replace(".", "_")
+        min_version = match.group(1)
+
+        # Map to available zigpkgs versions
+        # These are the specific versions available in zig-overlay
+        if min_version.startswith("0.14"):
+            return "0.14.1"
+        elif min_version.startswith("0.15"):
+            return "0.15.2"
+        else:
+            print(f"{YELLOW}Warning: Unsupported Zig version {min_version}, defaulting to 0.15.2{NC}")
+            return "0.15.2"
     return None
 
 
@@ -223,7 +231,7 @@ async def generate_zig_deps(sha):
         # Extract Zig version
         zig_version = extract_zig_version(zon_content)
         if zig_version:
-            print(f"{GREEN}  Detected Zig version: {zig_version.replace('_', '.')}{NC}")
+            print(f"{GREEN}  Detected Zig version: {zig_version}{NC}")
 
         deps_nix = await loop.run_in_executor(None, lambda: run_zon2nix(zon_content))
 
@@ -292,11 +300,11 @@ async def update_unstable(sha, source_hash):
     # Update Zig version if detected
     if zig_version:
         content = re.sub(
-            r', zig_\d+_\d+',
-            f', zig_{zig_version}',
+            r'zigpkgs\."[0-9]+\.[0-9]+(?:\.[0-9]+)?"',
+            f'zigpkgs."{zig_version}"',
             content
         )
-        print(f"{GREEN}  Updated Zig version to zig_{zig_version}{NC}")
+        print(f"{GREEN}  Updated Zig version to zigpkgs.\"{zig_version}\"{NC}")
 
     # Write back
     UNSTABLE_FILE.write_text(content)
