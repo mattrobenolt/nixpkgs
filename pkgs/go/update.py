@@ -205,27 +205,42 @@ async def main():
         print(f"{YELLOW}📦 Will track next: {prerelease}{NC}")
         print()
 
+    # Merge with existing versions.json, preserving any manually-pinned entries
+    # that the API doesn't return (e.g. EOL versions pinned by hand)
+    if VERSIONS_FILE.exists():
+        with open(VERSIONS_FILE) as f:
+            existing = json.load(f)
+        for key, val in existing.items():
+            if key not in versions:
+                print(f"{YELLOW}📌 Preserving pinned version {key}: {val}{NC}")
+                versions[key] = val
+
     # Write versions.json with all versions including next
     with open(VERSIONS_FILE, "w") as f:
         json.dump(versions, f, indent=2, sort_keys=True)
         f.write("\n")
 
-    # Update hashes for each version concurrently
+    # Only fetch hashes for versions not already present in hashes.json
+    if HASHES_FILE.exists():
+        with open(HASHES_FILE) as f:
+            existing_hashes = json.load(f)
+    else:
+        existing_hashes = {}
+
     await asyncio.gather(*[
         update_version_hashes(version)
         for version in versions.values()
+        if version not in existing_hashes
     ])
 
-    # Read all hashes
+    # Read all hashes and keep only tracked versions
     if HASHES_FILE.exists():
         with open(HASHES_FILE) as f:
             all_hashes = json.load(f)
 
-        # Only keep hashes for versions we're tracking
         tracked_versions = set(versions.values())
         new_hashes = {v: h for v, h in all_hashes.items() if v in tracked_versions}
 
-        # Write cleaned hashes back
         with open(HASHES_FILE, "w") as f:
             json.dump(new_hashes, f, indent=2, sort_keys=True)
             f.write("\n")
