@@ -15,10 +15,6 @@ check:
 update-go:
     @./pkgs/go/update.py
 
-# Update zlint stable and unstable packages
-update-zlint:
-    @./pkgs/zlint/update.py
-
 # Update inbox package
 update-inbox:
     @./pkgs/inbox/update.py
@@ -34,7 +30,6 @@ update-ziglint:
 # Update all packages
 update-all:
     @just update-go
-    @just update-zlint
     @just update-inbox
     @just update-zigdoc
     @just update-ziglint

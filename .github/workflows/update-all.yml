@@ -56,11 +56,6 @@ jobs:
           nix build .#go-bin --no-link
           echo "✓ go-bin builds"
 
-          # Build zlint packages
-          nix build .#zlint --no-link
-          nix build .#zlint-unstable --no-link
-          echo "✓ zlint packages build"
-
           # Build inbox package
           nix build .#inbox --no-link
           echo "✓ inbox builds"
@@ -78,7 +73,6 @@ jobs:
         run: |
           echo "🧪 Testing binaries..."
           nix run .#go-bin -- version
-          nix run .#zlint -- --version
           nix run .#inbox -- --help
           nix run .#zigdoc -- --help || echo "✓ zigdoc exists (may require input)"
           nix run .#ziglint -- --version

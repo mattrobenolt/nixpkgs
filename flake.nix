@@ -10,7 +10,6 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -21,10 +20,16 @@
     {
       self,
       nixpkgs,
-      flake-utils,
       treefmt-nix,
     }:
     let
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "aarch64-darwin"
+      ];
+      forAllSystems = nixpkgs.lib.genAttrs systems;
+
       # Load Go versions and hashes
       goVersions = builtins.fromJSON (builtins.readFile ./pkgs/go/versions.json);
       goHashes = builtins.fromJSON (builtins.readFile ./pkgs/go/hashes.json);
@@ -59,8 +64,6 @@
           );
         in
         {
-          zlint = prev.callPackage ./pkgs/zlint { };
-          zlint-unstable = prev.callPackage ./pkgs/zlint/unstable.nix { };
           uvShellHook = prev.callPackage ./pkgs/uv/venv-shell-hook.nix { };
           inbox = prev.callPackage ./pkgs/inbox { };
           zigdoc = prev.callPackage ./pkgs/zigdoc { };
@@ -71,6 +74,96 @@
           go-bin = makeGo prev latestGoVersion;
         }
         // dynamicGoPackages;
+
+      # Per-system derivations, evaluated lazily per system
+      perSystem =
+        system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+            overlays = [ overlay ];
+          };
+
+          treefmtEval = treefmt-nix.lib.evalModule pkgs {
+            projectRootFile = "flake.nix";
+
+            programs = {
+              nixfmt.enable = true; # Uses nixfmt-rfc-style by default
+              deadnix.enable = true;
+              statix.enable = true;
+            };
+
+            settings = {
+              global.excludes = [
+                ".direnv/**"
+              ];
+
+              formatter = {
+                deadnix.priority = 1; # Remove unused code first
+                statix.priority = 2; # Fix anti-patterns second
+                nixfmt.priority = 3; # Format last
+              };
+            };
+          };
+
+          # Get all go-bin_1_XX package names dynamically
+          goPackageNames = map (
+            majorMinor: "go-bin_" + (builtins.replaceStrings [ "." ] [ "_" ] majorMinor)
+          ) (builtins.attrNames goVersions);
+        in
+        {
+          packages =
+            builtins.listToAttrs (
+              map (name: {
+                inherit name;
+                value = pkgs.${name};
+              }) goPackageNames
+            )
+            // {
+              inherit (pkgs)
+                go-bin
+                uvShellHook
+                inbox
+                zigdoc
+                ziglint
+                tracy
+                ;
+              default = pkgs.ziglint;
+            };
+
+          # Formatter for `nix fmt`
+          formatter = treefmtEval.config.build.wrapper;
+
+          # Formatting check for CI
+          checks = {
+            formatting = treefmtEval.config.build.check self;
+          };
+
+          # Development shell with Nix tooling
+          devShells.default = pkgs.mkShell {
+            packages = [
+              # Task runner
+              pkgs.just
+
+              # For update scripts
+              pkgs.python3
+              pkgs.zon2nix # Zig dependency generator
+
+              # Unified formatting via treefmt-nix (includes nixfmt, deadnix, statix)
+              treefmtEval.config.build.wrapper
+
+              # Nix utilities
+              pkgs.nix-tree # Visualize dependency trees
+              pkgs.nix-diff # Diff derivations
+            ];
+
+            shellHook = ''
+              just --list --unsorted
+            '';
+          };
+        };
+
+      allSystems = forAllSystems perSystem;
     in
     {
       # Export the overlay for others to use
@@ -106,99 +199,10 @@
 
       # Default template
       defaultTemplate = self.templates.go;
-    }
-    // flake-utils.lib.eachDefaultSystem (
-      system:
-      let
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [ overlay ];
-        };
 
-        # Configure treefmt-nix
-        treefmtEval = treefmt-nix.lib.evalModule pkgs {
-          projectRootFile = "flake.nix";
-
-          programs = {
-            nixfmt.enable = true; # Uses nixfmt-rfc-style by default
-            deadnix.enable = true;
-            statix.enable = true;
-          };
-
-          settings = {
-            global.excludes = [
-              ".direnv/**"
-              "pkgs/zlint/deps.nix" # Auto-generated file
-            ];
-
-            formatter = {
-              deadnix.priority = 1; # Remove unused code first
-              statix.priority = 2; # Fix anti-patterns second
-              nixfmt.priority = 3; # Format last
-            };
-          };
-        };
-      in
-      {
-        packages =
-          let
-            # Get all go-bin_1_XX package names dynamically
-            goPackageNames = map (
-              majorMinor: "go-bin_" + (builtins.replaceStrings [ "." ] [ "_" ] majorMinor)
-            ) (builtins.attrNames goVersions);
-            # Create attrset with all go packages
-            goPackages = builtins.listToAttrs (
-              map (name: {
-                inherit name;
-                value = pkgs.${name};
-              }) goPackageNames
-            );
-          in
-          {
-            inherit (pkgs)
-              zlint
-              zlint-unstable
-              go-bin
-              uvShellHook
-              inbox
-              zigdoc
-              ziglint
-              tracy
-              ;
-            default = self.packages.${system}.zlint;
-          }
-          // goPackages;
-
-        # Formatter for `nix fmt`
-        formatter = treefmtEval.config.build.wrapper;
-
-        # Formatting check for CI
-        checks = {
-          formatting = treefmtEval.config.build.check self;
-        };
-
-        # Development shell with Nix tooling
-        devShells.default = pkgs.mkShell {
-          packages = [
-            # Task runner
-            pkgs.just
-
-            # For update scripts
-            pkgs.python3
-            pkgs.zon2nix # Zig dependency generator
-
-            # Unified formatting via treefmt-nix (includes nixfmt, deadnix, statix)
-            treefmtEval.config.build.wrapper
-
-            # Nix utilities
-            pkgs.nix-tree # Visualize dependency trees
-            pkgs.nix-diff # Diff derivations
-          ];
-
-          shellHook = ''
-            just --list --unsorted
-          '';
-        };
-      }
-    );
+      packages = builtins.mapAttrs (_: s: s.packages) allSystems;
+      formatter = builtins.mapAttrs (_: s: s.formatter) allSystems;
+      checks = builtins.mapAttrs (_: s: s.checks) allSystems;
+      devShells = builtins.mapAttrs (_: s: s.devShells) allSystems;
+    };
 }
