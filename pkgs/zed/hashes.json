@@ -1,0 +1,10 @@
+{
+  "0.229.0": {
+    "aarch64-linux": "sha256-YA4Ospn+Fek9N7C5FS8p9rtxblWc+ZOqIChdMVuIDRA=",
+    "x86_64-linux": "sha256-GA9N6veqUTo/BmSOPsqtJwv/zGRUHoV/HnA4EHGpCMs="
+  },
+  "0.230.0-pre": {
+    "aarch64-linux": "sha256-ZTDaYKg29iHR606gDujN+lzFkZ+FVCHBj14NwYb/6bs=",
+    "x86_64-linux": "sha256-057EK0/6Ge0esqyOsfas6TwXdsEMqQmcruBhSgaeyUM="
+  }
+}

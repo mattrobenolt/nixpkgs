@@ -15,12 +15,14 @@
         "aarch64-darwin"
       ];
 
-      perSystem = { pkgs, ... }: {
-        devShells.default = pkgs.mkShell {
-          packages = with pkgs; [
-            bun
-          ];
+      perSystem =
+        { pkgs, ... }:
+        {
+          devShells.default = pkgs.mkShell {
+            packages = with pkgs; [
+              bun
+            ];
+          };
         };
-      };
     };
 }
