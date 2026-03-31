@@ -27,10 +27,15 @@ update-zigdoc:
 update-ziglint:
     @./pkgs/ziglint/update.py
 
+# Update Zed package (stable + preview)
+update-zed:
+    @./pkgs/zed/update.py
+
 # Update all packages
 update-all:
     @just update-go
     @just update-inbox
     @just update-zigdoc
     @just update-ziglint
+    @just update-zed
 
