@@ -34,6 +34,20 @@
       goVersions = builtins.fromJSON (builtins.readFile ./pkgs/go/versions.json);
       goHashes = builtins.fromJSON (builtins.readFile ./pkgs/go/hashes.json);
 
+      # Load Zed versions and hashes
+      zedVersions = builtins.fromJSON (builtins.readFile ./pkgs/zed/versions.json);
+      zedHashes = builtins.fromJSON (builtins.readFile ./pkgs/zed/hashes.json);
+
+      makeZed =
+        prev: channel:
+        let
+          version = zedVersions.${channel};
+          hashes = zedHashes.${version};
+        in
+        prev.callPackage ./pkgs/zed {
+          inherit version hashes channel;
+        };
+
       # Helper to create a Go package for a specific version
       makeGo =
         prev: majorMinor:
@@ -69,6 +83,8 @@
           zigdoc = prev.callPackage ./pkgs/zigdoc { };
           ziglint = prev.callPackage ./pkgs/ziglint { };
           tracy = prev.callPackage ./pkgs/tracy { };
+          zed = makeZed prev "stable";
+          zed-preview = makeZed prev "preview";
 
           # Latest Go version as go-bin (automatically uses the highest version)
           go-bin = makeGo prev latestGoVersion;
@@ -129,6 +145,9 @@
                 tracy
                 ;
               default = pkgs.ziglint;
+            }
+            // nixpkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
+              inherit (pkgs) zed zed-preview;
             };
 
           # Formatter for `nix fmt`
