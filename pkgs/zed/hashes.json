@@ -1,7 +1,7 @@
 {
-  "0.231.1": {
-    "aarch64-linux": "sha256-8ndR6ZHRaqU4UfF6fpe4e2YLBrg77uwj5DyREz4p6bQ=",
-    "x86_64-linux": "sha256-qoRNxtPkfoocAwvrmK+QyZXerCkyYPNAsuLozCDHqUI="
+  "0.231.2": {
+    "aarch64-linux": "sha256-IaVGyhLav6/AzXXO65KSAgMBB6XFUmY7twPHG5hPKxQ=",
+    "x86_64-linux": "sha256-kgZRPji4o3zyfodL/z38ZebdGrH0rg++X+Eq90Zdw9w="
   },
   "0.232.0-pre": {
     "aarch64-linux": "sha256-ez0eqpW2eFgKvzQmJ+c5Q2hN/Q4UDzF4diFtMGjAcqI=",
