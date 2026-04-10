@@ -2,18 +2,9 @@
   lib,
   stdenvNoCC,
   fetchFromGitHub,
-  fetchzip,
   zig_0_15,
 }:
 
-let
-  # Pre-fetch the ziglint dependency required by zigdoc's build system.
-  # The hash corresponds to the package hash in build.zig.zon.
-  ziglintDep = fetchzip {
-    url = "https://github.com/rockorager/ziglint/archive/refs/tags/v0.5.2.tar.gz";
-    hash = "sha256-Q+iJ4vTqIm8FatvW8GdkmPEkIn7AEoMHHIhoWy+eYMs=";
-  };
-in
 stdenvNoCC.mkDerivation {
   pname = "zigdoc";
   version = "0.3.0";
@@ -27,14 +18,11 @@ stdenvNoCC.mkDerivation {
 
   nativeBuildInputs = [ zig_0_15 ];
 
+  patches = [ ./remove-ziglint.patch ];
+
   postPatch = ''
     substituteInPlace build.zig \
       --replace-fail '"../README.md"' '"README.md"'
-  '';
-
-  preBuild = ''
-    mkdir -p "$ZIG_GLOBAL_CACHE_DIR/p"
-    cp -r ${ziglintDep} "$ZIG_GLOBAL_CACHE_DIR/p/1220a87cf8c8d73c1ccb37e3fbcc488b4b6b29a73c2b936aae15f88a12b52c8c76e0"
   '';
 
   meta = with lib; {
