@@ -41,6 +41,7 @@ in
       source = toml.generate "hunk-config" cfg.settings;
     };
 
-    programs.git.settings.core.pager = lib.mkIf cfg.enableGitIntegration "hunk pager";
+    programs.git.settings.core.pager =
+      lib.mkIf cfg.enableGitIntegration "${lib.getExe cfg.package} pager";
   };
 }
