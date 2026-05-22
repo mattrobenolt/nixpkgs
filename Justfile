@@ -39,6 +39,11 @@ update-hunk:
 update-inbox:
     @just update inbox
 
+[doc("Update prismacat package")]
+[group("updates")]
+update-prismacat:
+    @just update prismacat
+
 [doc("Update zigdoc package")]
 [group("updates")]
 update-zigdoc:
@@ -56,4 +61,4 @@ update-zed:
 
 [doc("Update all packages")]
 [group("updates")]
-update-all: update-go update-hunk update-inbox update-zigdoc update-ziglint update-zed
+update-all: update-go update-hunk update-inbox update-prismacat update-zigdoc update-ziglint update-zed
