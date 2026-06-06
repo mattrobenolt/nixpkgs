@@ -44,7 +44,6 @@ pkgs.ast-grep {
   languages.zig = {
     grammar = pkgs.tree-sitter-grammars.tree-sitter-zig;
     extensions = [ "zig" ];
-    expandoChar = "_";
   };
 }
 ```
@@ -58,7 +57,6 @@ pkgs.mkShell {
       languages.zig = {
         grammar = pkgs.tree-sitter-grammars.tree-sitter-zig;
         extensions = [ "zig" ];
-        expandoChar = "_";
       };
     })
   ];
@@ -68,8 +66,8 @@ pkgs.mkShell {
 Then both commands use the generated config:
 
 ```bash
-ast-grep -l zig -p 'fn _NAME' src
-sg run -l zig -p 'fn _NAME' src
+ast-grep -l zig -p 'fn $NAME' src
+sg run -l zig -p 'fn $NAME' src
 ```
 
 For grammars that do not live at `$grammar/parser`, pass `libraryPath` directly. `ruleDirs` and `extraConfig` are also supported:
@@ -82,7 +80,6 @@ pkgs.ast-grep {
   languages.zig = {
     libraryPath = "${pkgs.tree-sitter-grammars.tree-sitter-zig}/parser";
     extensions = [ "zig" ];
-    expandoChar = "_";
     languageSymbol = "tree_sitter_zig";
   };
 }
