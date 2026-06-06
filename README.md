@@ -96,18 +96,18 @@ Add this repo as a flake input and apply the overlay:
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    mattrobenolt-nixpkgs = {
+    mattware = {
       url = "github:mattrobenolt/nixpkgs";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { nixpkgs, mattrobenolt-nixpkgs, ... }:
+  outputs = { nixpkgs, mattware, ... }:
     let
       system = "aarch64-darwin";
       pkgs = import nixpkgs {
         inherit system;
-        overlays = [ mattrobenolt-nixpkgs.overlays.default ];
+        overlays = [ mattware.overlays.default ];
       };
     in {
       devShells.${system}.default = pkgs.mkShell {
