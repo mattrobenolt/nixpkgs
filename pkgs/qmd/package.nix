@@ -5,9 +5,11 @@
   fetchFromGitHub,
   bun,
   makeWrapper,
-  nodejs,
+  nodejs_26,
   node-gyp,
   python3,
+  cmake,
+  git,
   sqlite,
   darwin ? null,
 }:
@@ -90,9 +92,11 @@ stdenv.mkDerivation {
   nativeBuildInputs = [
     bun
     makeWrapper
-    nodejs
+    nodejs_26
     node-gyp
     python3
+    cmake
+    git
   ]
   ++ lib.optional stdenv.hostPlatform.isDarwin darwin.cctools;
 
@@ -106,6 +110,16 @@ stdenv.mkDerivation {
     chmod -R u+w node_modules
     (cd node_modules/better-sqlite3 && node-gyp rebuild --release)
 
+    # node-llama-cpp ships no linux-aarch64 prebuilt, and at runtime it can
+    # only build into its own package dir — read-only in the nix store.
+    # Build the llama.cpp backend here instead; getLlama() prefers these
+    # localBuilds. The source comes from the bundled git bundle (offline).
+    (
+      cd node_modules/node-llama-cpp/llama
+      git clone --quiet gitRelease.bundle llama.cpp
+      ../.bin/node-llama-cpp source build --gpu false --noUsageExample
+    )
+
     runHook postBuild
   '';
 
@@ -115,8 +129,12 @@ stdenv.mkDerivation {
     mkdir -p $out/lib/qmd $out/bin
     cp -r node_modules src package.json $out/lib/qmd/
 
+    # Pin the node qmd spawns for its subprocesses: must match the ABI
+    # better-sqlite3 was built against above, and node 24.19.0 has the
+    # RemoveEnvironmentCleanupHook teardown regression (nodejs/node#63923).
     makeWrapper ${lib.getExe bun} $out/bin/qmd \
       --add-flags "$out/lib/qmd/src/cli/qmd.ts" \
+      --prefix PATH : ${nodejs_26}/bin \
       --set DYLD_LIBRARY_PATH "${lib.getLib sqlite}/lib" \
       --set LD_LIBRARY_PATH "${lib.getLib sqlite}/lib"
 
