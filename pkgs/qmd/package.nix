@@ -122,7 +122,7 @@ stdenv.mkDerivation {
     (
       cd node_modules/node-llama-cpp/llama
       git clone --quiet gitRelease.bundle llama.cpp
-      ../.bin/node-llama-cpp source build --gpu false --noUsageExample
+      ../../.bin/node-llama-cpp source build --gpu false --noUsageExample
     )
 
     runHook postBuild
