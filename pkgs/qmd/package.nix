@@ -122,7 +122,9 @@ stdenv.mkDerivation {
     (
       cd node_modules/node-llama-cpp/llama
       git clone --quiet gitRelease.bundle llama.cpp
-      ../../.bin/node-llama-cpp source build --gpu false --noUsageExample
+      # (invoke with node directly: the .bin shim's /usr/bin/env shebang
+      # does not exist in the sandbox)
+      ${lib.getExe nodejs_26} ../dist/cli/cli.js source build --gpu false --noUsageExample
     )
 
     runHook postBuild
