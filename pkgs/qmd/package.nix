@@ -102,6 +102,11 @@ stdenv.mkDerivation {
 
   buildInputs = [ sqlite ];
 
+  # cmake is only here to build node-llama-cpp's llama.cpp backend in
+  # buildPhase; qmd itself has no CMakeLists. Keep stdenv's cmake hook
+  # from trying to configure the package.
+  dontUseCmakeConfigure = true;
+
   buildPhase = ''
     runHook preBuild
 
