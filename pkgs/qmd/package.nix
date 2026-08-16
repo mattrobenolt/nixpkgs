@@ -123,6 +123,9 @@ stdenv.mkDerivation {
     # (node-llama-cpp's build shells out to npm run / cmake-js). The .bin
     # entries are symlinks, so patch the whole tree, not just .bin.
     patchShebangs node_modules
+    # node-gyp's nixpkgs wrapper points npm_config_nodedir at ITS node 24;
+    # build the binding against the node we pin at runtime instead (ABI).
+    export npm_config_nodedir=${nodejs_26}
     (cd node_modules/better-sqlite3 && node-gyp rebuild --release)
 
     # node-llama-cpp ships no linux-aarch64 prebuilt, and at runtime it can
