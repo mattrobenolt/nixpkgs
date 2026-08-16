@@ -34,6 +34,11 @@ let
   };
   target = targets.${system} or (throw "qmd: unsupported system ${system}");
 
+  # Metal only exists on darwin; linux builds CPU-only.
+  gpuFlag = if stdenv.hostPlatform.isDarwin then "auto" else "false";
+  # node-llama-cpp's localBuilds layout, e.g. linux-arm64, darwin-arm64.
+  llamaTarget = "${target.os}-${target.cpu}";
+
   src = fetchFromGitHub {
     owner = "tobi";
     repo = "qmd";
@@ -123,12 +128,17 @@ stdenv.mkDerivation {
     # only build into its own package dir — read-only in the nix store.
     # Build the llama.cpp backend here instead; getLlama() prefers these
     # localBuilds. The source comes from the bundled git bundle (offline).
+    #
+    # Two environment traps: the .bin shims' /usr/bin/env shebangs do not
+    # exist in the sandbox (invoke with node directly), and the 3.18.1 CLI
+    # spins forever after a successful tty-less compile — the artifacts are
+    # complete by then, so bound it with timeout and assert the output.
     (
       cd node_modules/node-llama-cpp/llama
       git clone --quiet gitRelease.bundle llama.cpp
-      # (invoke with node directly: the .bin shim's /usr/bin/env shebang
-      # does not exist in the sandbox)
-      ${lib.getExe nodejs_26} ../dist/cli/cli.js source build --gpu false --noUsageExample
+      ${lib.getExe' coreutils "timeout"} --kill-after=30 1200 \
+        ${lib.getExe nodejs_26} ../dist/cli/cli.js source build ${gpuFlag} --noUsageExample || true
+      test -f localBuilds/${llamaTarget}/Release/llama-addon.node
     )
 
     runHook postBuild
