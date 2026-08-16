@@ -35,8 +35,6 @@ let
   };
   target = targets.${system} or (throw "qmd: unsupported system ${system}");
 
-  # Metal only exists on darwin; linux builds CPU-only.
-  gpuFlag = if stdenv.hostPlatform.isDarwin then "auto" else "false";
   # node-llama-cpp's localBuilds layout, e.g. linux-arm64, darwin-arm64.
   llamaTarget = "${target.os}-${target.cpu}";
 
@@ -141,7 +139,7 @@ stdenv.mkDerivation {
       cd node_modules/node-llama-cpp/llama
       git clone --quiet gitRelease.bundle llama.cpp
       ${lib.getExe' coreutils "timeout"} --kill-after=30 1200 \
-        ${lib.getExe nodejs_26} ../dist/cli/cli.js source build ${gpuFlag} --noUsageExample || true
+        ${lib.getExe nodejs_26} ../dist/cli/cli.js source build --noUsageExample || true
       test -f localBuilds/${llamaTarget}/Release/llama-addon.node
     )
 
