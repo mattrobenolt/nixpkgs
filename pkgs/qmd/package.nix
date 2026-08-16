@@ -10,6 +10,7 @@
   python3,
   cmake,
   git,
+  coreutils,
   sqlite,
   darwin ? null,
 }:
