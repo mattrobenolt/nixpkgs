@@ -113,6 +113,9 @@ stdenv.mkDerivation {
     export HOME=$(mktemp -d)
     cp -R ${nodeModules}/node_modules ./
     chmod -R u+w node_modules
+    # the vendored .bin shims have /usr/bin/env shebangs, absent in the
+    # sandbox (node-llama-cpp's build shells out to npm run / cmake-js)
+    patchShebangs node_modules/.bin
     (cd node_modules/better-sqlite3 && node-gyp rebuild --release)
 
     # node-llama-cpp ships no linux-aarch64 prebuilt, and at runtime it can
